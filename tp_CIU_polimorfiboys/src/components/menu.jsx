@@ -1,28 +1,35 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
-const Menu = (setActiveTab) => {
-  const menuItems = [
-    { id: 1, name: "Café", price: 2.5, description: "Café negro" },
-    { id: 2, name: "Té", price: 2.0, description: "Té verde" },
-    {
-      id: 3,
-      name: "Sandwich",
-      price: 5.0,
-      description: "Sandwich de jamón y queso",
-    },
-  ];
+const Menu = ({ setActiveTab }) => {
+  const [menuItems, setMenuItems] = useState([]);
+  const [items, setItems] = useState({});
 
-  const [selectedItems, setSelectedItems] = useState({});
+  useEffect(() => {
+    fetch('https://api.sampleapis.com/coffee/hot')
+      .then(response => {
+        return response.json();
+      })
+      .then(data => {
+        const itemsWithPrices = data.map(item => ({
+          ...item,
+          price: Math.floor(Math.random() * 1000) + 500 // Genera un precio ficticio para cada café
+        }));
+        setMenuItems(itemsWithPrices);
+      })
+      .catch(error => {
+        console.log(error)
+      });
+  }, []);
 
   const handleSelectItem = (id, quantity) => {
-    setSelectedItems((prevItems) => ({
+    setItems((prevItems) => ({
       ...prevItems,
       [id]: quantity,
     }));
   };
 
   const calculateTotal = () => {
-    return Object.entries(selectedItems).reduce((total, [id, quantity]) => {
+    return Object.entries(items).reduce((total, [id, quantity]) => {
       const item = menuItems.find((item) => item.id === parseInt(id));
       return total + item.price * quantity;
     }, 0);
@@ -30,27 +37,25 @@ const Menu = (setActiveTab) => {
 
   return (
     <div>
-      <h1>Menú de la Cafetería</h1>
-      <ul>
+      <h3 className='center-titles margin-bottom'>Menú de la Cafetería</h3>
+      <p className='center-titles margin-bottom'>Podés ver los precios de nuestros cafés y calcular el total</p>
+
+      <div className="menu-container">
         {menuItems.map((item) => (
-          <li key={item.id}>
-            <h2>
-              {item.name} - ${item.price}
-            </h2>
-            <p>{item.description}</p>
+          <div key={item.id} className="menu-item">
+            <h5>{item.title} - ${item.price}</h5>
             <input
               type="number"
               min="0"
-              value={selectedItems[item.id] || 0}
+              value={items[item.id] || 0}
               onChange={(e) =>
                 handleSelectItem(item.id, parseInt(e.target.value))
               }
             />
-          </li>
+          </div>
         ))}
-      </ul>
-      <button onClick={calculateTotal}>Calcular Total</button>
-      <h2>Total: ${calculateTotal().toFixed(2)}</h2>
+      </div>
+      <h4 className='center-titles margin-bottom'>Total: ${calculateTotal()}</h4>
     </div>
   );
 };
